@@ -1,0 +1,30 @@
+# Byte-compiled / optimized
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Virtual envs / tooling caches
+.venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# uv
+# (uv.lock IS committed; do not ignore it)
+
+# Local work volumes
+/input/
+/output/
+/spec/
+
+# Editors / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

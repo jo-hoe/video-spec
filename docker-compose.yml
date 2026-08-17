@@ -1,0 +1,23 @@
+services:
+  videospec:
+    build: .
+    image: videospec:latest
+    # Run once and exit: `docker compose run --rm videospec`
+    user: "10001:10001"
+    read_only: true
+    environment:
+      VIDEOSPEC_SPEC_PATH: /work/spec/spec.yaml
+      VIDEOSPEC_INPUT_ROOT: /work/input
+      VIDEOSPEC_OUTPUT_ROOT: /work/output
+      VIDEOSPEC_WORK_ROOT: /work/tmp
+      VIDEOSPEC_LOG_LEVEL: INFO
+    volumes:
+      - ./spec:/work/spec:ro
+      - ./input:/work/input:ro
+      - ./output:/work/output
+      # Intermediate artifacts live inside the container by default (see tmpfs below).
+      # Uncomment to inspect/persist them on the host instead:
+      # - ./work:/work/tmp
+    tmpfs:
+      # Writable scratch for intermediate artifacts; not persisted or host-mapped.
+      - /work/tmp

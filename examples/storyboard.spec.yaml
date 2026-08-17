@@ -1,0 +1,29 @@
+# Example videospec spec.
+#
+# Copy to ./spec/spec.yaml (the default VIDEOSPEC_SPEC_PATH) and place your videos under
+# ./input. Every operation argument has a sensible default, so a minimal operation is just
+# `- type: storyboard`.
+
+version: 1
+
+# Number of discovered videos processed in parallel (default 1).
+concurrency: 4
+
+job:
+  # `input` may be a single file (e.g. movies/interview.mp4) or a directory.
+  input: .
+  # For a directory source, outputs mirror the input tree under this output directory.
+  output: .
+  # Discover videos in all subfolders below `input` (default false).
+  recursive: true
+  operations:
+    - type: storyboard
+      # Defaults shown for reference; omit any you don't need to change:
+      # interval_seconds: 10
+      # columns: 5
+      # rows: 5
+      # tile_width: 160
+      # tile_height: 90
+      # jpeg_quality: 4          # 2 (best) .. 31 (worst)
+      # sprite_basename: storyboard
+      container: mkv             # mkv (reliable) or mp4 (best-effort)

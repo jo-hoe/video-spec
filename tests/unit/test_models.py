@@ -7,7 +7,7 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-from videospec.models.spec import Spec
+from videospec.models.spec import LogLevel, Spec
 from videospec.models.storyboard import Container, StoryboardOperation
 
 
@@ -93,3 +93,18 @@ def test_container_rejects_unknown_value() -> None:
 def test_tiles_per_sheet() -> None:
     op = StoryboardOperation(columns=8, rows=4)
     assert op.tiles_per_sheet == 32
+
+
+def test_log_level_defaults_to_none() -> None:
+    spec = Spec.model_validate(_spec_data())
+    assert spec.log_level is None
+
+
+def test_log_level_accepts_string_value() -> None:
+    spec = Spec.model_validate(_spec_data(spec_over={"log_level": "DEBUG"}))
+    assert spec.log_level is LogLevel.DEBUG
+
+
+def test_log_level_rejects_unknown() -> None:
+    with pytest.raises(ValidationError):
+        Spec.model_validate(_spec_data(spec_over={"log_level": "TRACE"}))

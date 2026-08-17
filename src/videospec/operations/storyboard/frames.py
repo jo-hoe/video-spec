@@ -13,6 +13,17 @@ def sheet_output_pattern(work_dir: Path, sprite_basename: str) -> Path:
     return work_dir / f"{sprite_basename}-%03d.jpg"
 
 
+def discover_sheets(work_dir: Path, sprite_basename: str) -> list[Path]:
+    """Return the sprite sheets ffmpeg actually wrote, in page order.
+
+    We cannot rely on a predicted sheet count: ``fps=1/N`` may emit a different number of
+    frames than ``ceil(duration / N)`` for variable-frame-rate or oddly-clipped sources,
+    so the real page count is whatever ended up on disk. Globbing the actual files is the
+    source of truth for both the attachments and the WebVTT cues.
+    """
+    return sorted(work_dir.glob(f"{sprite_basename}-*.jpg"))
+
+
 def build_tile_argv(
     tools: ToolPaths,
     op: StoryboardOperation,

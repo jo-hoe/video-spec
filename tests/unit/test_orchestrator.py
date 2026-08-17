@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
 from pydantic import BaseModel
 
 from tests.conftest import FakeRunner
@@ -79,6 +80,29 @@ def test_all_items_succeed(
     assert all(o.ok for o in outcomes)
     assert (output_root / "out" / "a.mkv").exists()
     assert {p.name for p in seen} == {"a.mp4", "b.mp4"}
+
+
+def test_progress_is_logged(
+    resolver: PathResolver,
+    roots: tuple[Path, Path],
+    tools: ToolPaths,
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    src = roots[0] / "in"
+    src.mkdir()
+    (src / "a.mp4").write_bytes(b"x")
+    (src / "b.mp4").write_bytes(b"x")
+
+    with caplog.at_level("INFO"):
+        _orchestrator(resolver, tools, _registry_recording([]), tmp_path / "work").run(
+            _spec("in", "out")
+        )
+
+    messages = [r.getMessage() for r in caplog.records]
+    assert any("processing 2 video(s) with concurrency=" in m for m in messages)
+    # Both items report a [done/total] completion line.
+    assert sum("[2/2] done" in m or "[1/2] done" in m for m in messages) == 2
 
 
 def test_one_failure_does_not_abort_siblings(

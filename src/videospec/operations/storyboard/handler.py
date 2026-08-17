@@ -11,7 +11,11 @@ from videospec.operations.base import OperationContext, OperationResult
 from videospec.operations.registry import REGISTRY
 from videospec.operations.storyboard import frames, vtt
 from videospec.operations.storyboard.embed import get_embed_strategy
-from videospec.operations.storyboard.geometry import StoryboardLayout, plan_layout
+from videospec.operations.storyboard.geometry import (
+    StoryboardLayout,
+    clamp_to_sheets,
+    plan_layout,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -22,10 +26,13 @@ class StoryboardHandler:
 
     def run(self, op: StoryboardOperation, ctx: OperationContext) -> OperationResult:
         duration = FFprobe(ctx.runner, ctx.tools).duration_seconds(ctx.input_path)
-        layout = plan_layout(duration, op)
+        predicted = plan_layout(duration, op)
         self._extract_sheets(op, ctx)
+        # ffmpeg decides the real sheet count; reconcile the layout with what it wrote so
+        # the VTT never references a sprite sheet that does not exist.
+        sprites = frames.discover_sheets(ctx.work_dir, op.sprite_basename)
+        layout = clamp_to_sheets(predicted, len(sprites))
         vtt_path = self._write_vtt(op, ctx, layout)
-        sprites = self._collect_sheets(op, ctx, layout)
         self._embed(op, ctx, vtt_path, sprites)
         return OperationResult(output_path=ctx.output_path, artifacts=(vtt_path, *sprites))
 
@@ -39,15 +46,6 @@ class StoryboardHandler:
         vtt_path = ctx.work_dir / f"{op.sprite_basename}.vtt"
         vtt_path.write_text(vtt.render_vtt(layout, op.sprite_basename), encoding="utf-8")
         return vtt_path
-
-    def _collect_sheets(
-        self, op: StoryboardOperation, ctx: OperationContext, layout: StoryboardLayout
-    ) -> list[Path]:
-        sprites = [
-            ctx.work_dir / vtt.sprite_filename(op.sprite_basename, page)
-            for page in range(1, layout.sheet_count + 1)
-        ]
-        return [sprite for sprite in sprites if sprite.exists()]
 
     def _embed(
         self,

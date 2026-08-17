@@ -2,12 +2,22 @@
 
 from __future__ import annotations
 
+from enum import StrEnum
 from typing import Annotated, Literal
 
 from pydantic import Field
 
 from videospec.models.base import StrictModel
 from videospec.models.operations import Operation
+
+
+class LogLevel(StrEnum):
+    """Logging verbosity, mirroring the standard logging levels."""
+
+    DEBUG = "DEBUG"
+    INFO = "INFO"
+    WARNING = "WARNING"
+    ERROR = "ERROR"
 
 
 class VideoJob(StrictModel):
@@ -31,4 +41,6 @@ class Spec(StrictModel):
     version: Literal[1] = 1
     # Number of discovered videos processed in parallel. Defaults to 1; user-settable.
     concurrency: Annotated[int, Field(gt=0)] = 1
+    # Optional; when set it overrides the VIDEOSPEC_LOG_LEVEL environment default.
+    log_level: Annotated[LogLevel, Field(strict=False)] | None = None
     job: VideoJob

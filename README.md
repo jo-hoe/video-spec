@@ -38,6 +38,7 @@ required.
 ```yaml
 version: 1
 concurrency: 4            # videos processed in parallel (default 1)
+log_level: INFO           # DEBUG|INFO|WARNING|ERROR (optional; overrides env default)
 job:
   input: clips            # a directory, or a single file like clips/demo.mp4
   output: clips           # output directory (outputs mirror the input tree)
@@ -45,6 +46,16 @@ job:
   operations:
     - type: storyboard    # defaults: interval_seconds=10, columns=5, rows=5,
                           # tile_width=160, tile_height=90, jpeg_quality=4, container=mkv
+```
+
+At `INFO` (the default) each video is announced when it starts and reports a
+`[done/total]` line with elapsed time when it finishes, so a Docker Compose run shows
+speaking progress across the batch:
+
+```
+INFO ... processing 25 video(s) with concurrency=4
+INFO ... processing clip-01.mp4
+INFO ... [1/25] done clip-01.mp4 (12.4s)
 ```
 
 ### `storyboard` operation
@@ -87,6 +98,19 @@ docker compose build
 docker compose run --rm videospec
 # outputs appear under ./output
 ```
+
+### Troubleshooting
+
+- **`Permission denied: '/work/tmp/item-XXXX'`** — the scratch dir must be writable by the
+  non-root user (uid 10001). The provided `docker-compose.yml` mounts it as
+  `tmpfs: /work/tmp:mode=1777`. If you run the image with a raw `docker run --tmpfs`, pass
+  a writable mode: `--mount type=tmpfs,destination=/work/tmp,tmpfs-mode=1777`.
+- **`cannot read spec file '/work/spec/spec.yaml'`** — the spec volume isn't mounted where
+  expected. Ensure your spec is at the host path mounted to `/work/spec` (or point
+  `VIDEOSPEC_SPEC_PATH` elsewhere). On Windows/Git Bash, use real drive paths (e.g.
+  `D:\...`) for `-v` mounts, not MSYS `/tmp`.
+- **Output directory nested inside the input** — keep `recursive: false` so discovery
+  doesn't descend into (and reprocess) your output subfolder.
 
 ## Architecture
 

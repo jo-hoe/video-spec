@@ -6,6 +6,10 @@
 
 version: 1
 
+# Logging verbosity: DEBUG | INFO | WARNING | ERROR. Optional; overrides the
+# VIDEOSPEC_LOG_LEVEL environment default when set. INFO logs per-video progress.
+log_level: INFO
+
 # Number of discovered videos processed in parallel (default 1).
 concurrency: 4
 

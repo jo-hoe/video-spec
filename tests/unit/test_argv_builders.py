@@ -8,7 +8,11 @@ from videospec.ffmpeg.tools import ToolPaths
 from videospec.models.storyboard import StoryboardOperation
 from videospec.operations.storyboard.embed.mkv import MkvEmbedder
 from videospec.operations.storyboard.embed.mp4 import Mp4Embedder
-from videospec.operations.storyboard.frames import build_tile_argv, sheet_output_pattern
+from videospec.operations.storyboard.frames import (
+    build_tile_argv,
+    discover_sheets,
+    sheet_output_pattern,
+)
 
 
 def test_tile_argv_filter_and_output(tools: ToolPaths) -> None:
@@ -20,6 +24,23 @@ def test_tile_argv_filter_and_output(tools: ToolPaths) -> None:
     assert argv[argv.index("-qscale:v") + 1] == "4"
     assert argv[-1] == str(sheet_output_pattern(Path("/work"), "storyboard"))
     assert "-i" in argv and argv[argv.index("-i") + 1] == str(Path("/in/a.mp4"))
+
+
+def test_discover_sheets_returns_pages_in_order(tmp_path: Path) -> None:
+    # Create out of order to prove sorting.
+    for page in (2, 1, 3):
+        (tmp_path / f"storyboard-{page:03d}.jpg").write_bytes(b"jpeg")
+    (tmp_path / "storyboard.vtt").write_bytes(b"x")  # non-sheet file must be ignored
+    sheets = discover_sheets(tmp_path, "storyboard")
+    assert [p.name for p in sheets] == [
+        "storyboard-001.jpg",
+        "storyboard-002.jpg",
+        "storyboard-003.jpg",
+    ]
+
+
+def test_discover_sheets_empty_when_none(tmp_path: Path) -> None:
+    assert discover_sheets(tmp_path, "storyboard") == []
 
 
 def test_mkv_embed_argv(tools: ToolPaths) -> None:

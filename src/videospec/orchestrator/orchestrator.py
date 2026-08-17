@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import logging
 import shutil
+import threading
+import time
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
@@ -28,6 +30,34 @@ class ItemOutcome:
     item: WorkItem
     ok: bool
     error: str | None = None
+
+
+class _Progress:
+    """Thread-safe completion counter for human-readable progress logging.
+
+    A progress *bar* is a poor fit here: work runs concurrently and Docker Compose
+    captures line-based, non-TTY logs. Speaking ``[done/total]`` lines with per-item
+    timing read cleanly in that scenario and interleave sanely across workers.
+    """
+
+    def __init__(self, total: int) -> None:
+        self._total = total
+        self._done = 0
+        self._lock = threading.Lock()
+
+    def start(self, item: WorkItem) -> float:
+        logger.info("processing %s", item.input_path.name)
+        return time.monotonic()
+
+    def finish(self, item: WorkItem, started_at: float, *, ok: bool) -> None:
+        elapsed = time.monotonic() - started_at
+        with self._lock:
+            self._done += 1
+            done = self._done
+        status = "done" if ok else "FAILED"
+        logger.info(
+            "[%d/%d] %s %s (%.1fs)", done, self._total, status, item.input_path.name, elapsed
+        )
 
 
 class Orchestrator:
@@ -56,20 +86,29 @@ class Orchestrator:
             logger.warning("no videos matched job input %r", spec.job.input)
             return []
         logger.info("processing %d video(s) with concurrency=%d", len(items), spec.concurrency)
+        progress = _Progress(len(items))
         indexed = list(enumerate(items))
         with ThreadPoolExecutor(max_workers=spec.concurrency) as pool:
-            return list(pool.map(lambda pair: self._process(spec.job, pair[0], pair[1]), indexed))
+            return list(
+                pool.map(lambda pair: self._process(spec.job, pair[0], pair[1], progress), indexed)
+            )
 
-    def _process(self, job: VideoJob, index: int, item: WorkItem) -> ItemOutcome:
+    def _process(
+        self, job: VideoJob, index: int, item: WorkItem, progress: _Progress
+    ) -> ItemOutcome:
         work_dir = self._work_root / f"item-{index:04d}"
+        started_at = progress.start(item)
+        ok = True
+        error: str | None = None
         try:
             self._process_item(job, item, work_dir)
         except Exception as exc:  # isolate one item's failure from its siblings
             logger.error("failed processing %s: %s", item.input_path, exc)
-            return ItemOutcome(item=item, ok=False, error=str(exc))
+            ok, error = False, str(exc)
         finally:
             shutil.rmtree(work_dir, ignore_errors=True)
-        return ItemOutcome(item=item, ok=True)
+        progress.finish(item, started_at, ok=ok)
+        return ItemOutcome(item=item, ok=ok, error=error)
 
     def _process_item(self, job: VideoJob, item: WorkItem, work_dir: Path) -> None:
         item.output_path.parent.mkdir(parents=True, exist_ok=True)

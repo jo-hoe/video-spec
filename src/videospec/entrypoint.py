@@ -36,6 +36,9 @@ def main() -> int:
 
 def _run(settings: Settings) -> int:
     spec = load_spec(settings.spec_path)
+    # A log_level in the spec overrides the environment default.
+    if spec.log_level is not None:
+        configure_logging(spec.log_level.value)
     resolver = PathResolver(settings.input_root, settings.output_root)
     settings.work_root.mkdir(parents=True, exist_ok=True)
     orchestrator = Orchestrator(

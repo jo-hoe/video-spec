@@ -18,7 +18,7 @@ WORKDIR /app
 
 # Install dependencies first for better layer caching. Fall back to a plain resolve when
 # no lockfile is present in the build context.
-COPY pyproject.toml README.md ./
+COPY pyproject.toml README.md LICENSE ./
 COPY uv.loc[k] ./
 RUN if [ -f uv.lock ]; then uv sync --frozen --no-install-project --no-dev; \
     else uv sync --no-install-project --no-dev; fi

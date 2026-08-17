@@ -1,7 +1,7 @@
 # video-spec
 
 [![CI](https://github.com/jo-hoe/video-spec/actions/workflows/ci.yml/badge.svg)](https://github.com/jo-hoe/video-spec/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License: MIT NON-AI](https://img.shields.io/badge/License-MIT%20NON--AI-yellow.svg)](LICENSE)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue.svg)](https://www.python.org/downloads/)
 [![Checked with mypy](https://img.shields.io/badge/mypy-strict-blue.svg)](https://mypy-lang.org/)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)

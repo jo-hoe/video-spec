@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import pytest
@@ -34,8 +35,10 @@ def test_traversal_rejected(resolver: PathResolver, evil: str) -> None:
 
 
 def test_absolute_path_rejected(resolver: PathResolver) -> None:
+    # An OS-appropriate absolute path must never resolve inside the root.
+    absolute = "C:/Windows/System32/x" if os.name == "nt" else "/etc/passwd"
     with pytest.raises(PathSecurityError):
-        resolver.resolve_output("C:/Windows/System32/x")
+        resolver.resolve_output(absolute)
 
 
 def test_output_need_not_exist(resolver: PathResolver, roots: tuple[Path, Path]) -> None:

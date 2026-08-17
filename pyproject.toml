@@ -3,6 +3,7 @@ name = "videospec"
 version = "0.1.0"
 description = "Dockerized, one-shot ffmpeg-orchestration service that edits videos from a YAML spec"
 readme = "README.md"
+license = { file = "LICENSE" }
 requires-python = ">=3.12"
 dependencies = [
     "pydantic>=2.7",

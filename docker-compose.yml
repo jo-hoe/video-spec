@@ -20,4 +20,5 @@ services:
       # - ./work:/work/tmp
     tmpfs:
       # Writable scratch for intermediate artifacts; not persisted or host-mapped.
-      - /work/tmp
+      # mode=1777 so the non-root user (uid 10001) can create per-item work dirs.
+      - /work/tmp:mode=1777

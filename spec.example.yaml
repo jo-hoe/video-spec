@@ -1,0 +1,44 @@
+# videospec starter config — copy this to get going:
+#
+#   cp spec.example.yaml spec/spec.yaml
+#
+# Then drop your videos under ./input and run:
+#
+#   docker compose run --rm videospec
+#
+# Outputs appear under ./output. Every operation argument has a sensible default, so the
+# only required field on an operation is `type`. Uncomment fields below to override.
+
+version: 1
+
+# Logging verbosity: DEBUG | INFO | WARNING | ERROR (optional; overrides the
+# VIDEOSPEC_LOG_LEVEL environment default). INFO prints per-video progress.
+log_level: INFO
+
+# How many discovered videos to process in parallel (default 1).
+concurrency: 2
+
+job:
+  # Source: a directory (scanned for videos) or a single file, relative to the input
+  # root (./input via docker compose). "." means the whole input directory.
+  input: .
+
+  # Output directory, relative to the output root (./output via docker compose). For a
+  # directory source, outputs mirror the input tree here. "." means the output root.
+  output: .
+
+  # Scan subfolders below `input` too (default false). Keep false when your output
+  # directory is nested inside the input directory, so outputs aren't re-processed.
+  recursive: false
+
+  operations:
+    - type: storyboard
+      # --- all optional; defaults shown ---
+      # interval_seconds: 10       # sample one frame every N seconds
+      # columns: 5                 # sprite-sheet grid columns
+      # rows: 5                    # sprite-sheet grid rows
+      # tile_width: 160            # thumbnail width in px
+      # tile_height: 90            # thumbnail height in px
+      # jpeg_quality: 4            # ffmpeg qscale, 2 (best) .. 31 (worst)
+      # sprite_basename: storyboard
+      # container: mkv             # mkv (reliably embeds sprite + VTT) or mp4 (best-effort)

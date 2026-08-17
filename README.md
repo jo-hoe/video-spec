@@ -94,10 +94,14 @@ pytest -m integration        # real ffmpeg (needs ffmpeg/ffprobe on PATH)
 
 ```bash
 docker compose build
-# place a video under ./input and a spec at ./spec/spec.yaml
+cp spec.example.yaml spec/spec.yaml   # starter config; edit as needed
+# drop your videos under ./input
 docker compose run --rm videospec
 # outputs appear under ./output
 ```
+
+A ready-to-copy starter config lives at [`spec.example.yaml`](spec.example.yaml); a fuller
+annotated example is in [`examples/storyboard.spec.yaml`](examples/storyboard.spec.yaml).
 
 ### Troubleshooting
 
